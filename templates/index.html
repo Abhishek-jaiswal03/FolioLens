@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Portfolio Review</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <header class="bg-indigo-600 text-white py-4">
+        <h1 class="text-center text-2xl font-bold">AI Portfolio Review</h1>
+    </header>
+
+    <main class="container mx-auto py-12 px-6">
+        <div class="flex flex-col space-y-4">
+            <h2 class="text-xl font-bold">Enter your portfolio domain:</h2>
+            <form id="reviewForm">
+                <div class="flex rounded-md shadow-sm overflow-hidden">
+                    <input name="domain" type="text" id="domainInput" class="flex-grow px-4 py-2 border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:ring-1" placeholder="e.g. example.com">
+                    <button type="submit" id="submitButton" class="px-4 py-2 text-white bg-indigo-500 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Review
+                    </button>
+                </div>
+            </form>
+            <p id="loadingMessage" class="hidden text-gray-600 mt-2">Analyzing... This may take 2-3 minutes.</p>
+        </div>
+
+        <div id="portfolioAnalysisContainer" class="hidden mt-6">
+            <h2 class="text-2xl font-bold mb-4">Portfolio Feedback:</h2>
+            <div class="bg-gray-50 p-4 rounded-md border border-gray-300 text-gray-800 whitespace-pre-wrap overflow-auto max-w-full break-words">
+                <p id="responseMessage" class="text-lg leading-relaxed"></p>
+            </div>
+        </div>
+
+        <div id="screenshotSection" class="hidden mt-6">
+            <h2 class="text-2xl font-bold mb-4">Screenshot:</h2>
+            <a id="screenshotLink" href="#" target="_blank">
+                <img id="portfolioScreenshot" src="" alt="Portfolio Screenshot" class="rounded-md border border-gray-300 w-full max-h-96 object-contain">
+            </a>
+        </div>
+
+        <div class="hidden text-center mt-4" id="loader">
+            <p class="text-gray-500">Loading...</p>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('reviewForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const domain = document.getElementById('domainInput').value;
+            if (!domain) {
+                alert('Please enter your portfolio site domain');
+                return;
+            }
+
+            const loader = document.getElementById('loader');
+            const portfolioAnalysisContainer = document.getElementById('portfolioAnalysisContainer');
+            const responseMessage = document.getElementById('responseMessage');
+            const screenshotSection = document.getElementById('screenshotSection');
+            const portfolioScreenshot = document.getElementById('portfolioScreenshot');
+            const screenshotLink = document.getElementById('screenshotLink');
+
+            portfolioAnalysisContainer.classList.add('hidden');
+            screenshotSection.classList.add('hidden');
+            loader.classList.remove("hidden");
+
+            fetch('/submit-url/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                },
+                body: JSON.stringify({ domain })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.review) {
+                    responseMessage.innerText = data.review;
+                    portfolioAnalysisContainer.classList.remove('hidden');
+                }
+
+                if (data.screenshot_url) {
+                    portfolioScreenshot.src = data.screenshot_url;
+                    screenshotLink.href = data.screenshot_url;
+                    screenshotSection.classList.remove('hidden');
+                }
+
+                if (data.error) {
+                    responseMessage.innerText = data.error;
+                    portfolioAnalysisContainer.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                responseMessage.innerText = `Error: ${error.message}`;
+                portfolioAnalysisContainer.classList.remove('hidden');
+            })
+            .finally(() => {
+                loader.classList.add("hidden");
+            });
+        });
+    </script>
+</body>
+</html>
