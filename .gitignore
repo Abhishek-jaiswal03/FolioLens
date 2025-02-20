@@ -1,0 +1,29 @@
+# Python-related files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+env/
+
+# Django-related files
+db.sqlite3
+*.log
+
+# Environment variables
+.env
+
+# Static and media files (if applicable)
+staticfiles/
+media/
+
+# IDE-related files
+.vscode/
+.idea/
+
+# OS-specific files
+Thumbs.db  # Windows
+
+# Other unnecessary files
+*.swp  # Swap files created by some text editors
